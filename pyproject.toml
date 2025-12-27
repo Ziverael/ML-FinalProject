@@ -17,6 +17,7 @@ dependencies = [
     "polars==1.33.1",
     "pydantic==2.11.10",
     "scikit-learn>=1.7.2",
+    "tensorflow>=2.20.0",
     "tqdm>=4.67.1",
 ]
 requires-python=">= 3.12, <3.13"

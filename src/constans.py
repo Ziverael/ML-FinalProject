@@ -5,6 +5,7 @@ class _ProjectPaths(BaseModel):
     project : Path = Path.cwd()
     data : Path = project / "data"
     tmp : Path = project / "tmp"
+    logs : Path = project / "logs"
 
 PROJECT_PATHS = _ProjectPaths()
 

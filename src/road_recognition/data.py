@@ -3,9 +3,11 @@ from src.constans import IMG_EXT, IMG_SHAPE, COLOR_INT_RANGE, PROJECT_PATHS
 import cv2
 import numpy as np
 from numpy.typing import NDArray
+from sklearn.model_selection import train_test_split
 
 type ImageMatrix = NDArray[np.uint8]
 type ImageNormedMatrix = NDArray[np.float64]
+
 
 def list_data_dir(subdir: str) -> list[Path]:
     return [p for p in (PROJECT_PATHS.data / subdir).iterdir()]
@@ -25,15 +27,24 @@ def load_image_and_label(filename: str) -> tuple[ImageMatrix, ImageMatrix]:
         raise ValueError(msg)
     return cv2.imread(img_path), cv2.imread(lab_path)
 
-def normalize_image(img: ImageMatrix) -> ImageNormedMatrix: 
+
+def normalize_image(img: ImageMatrix) -> ImageNormedMatrix:
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, IMG_SHAPE)
     return img / COLOR_INT_RANGE
 
-def normalize_label(img: ImageMatrix) -> ImageNormedMatrix: 
+
+def normalize_label(img: ImageMatrix) -> ImageNormedMatrix:
     img = cv2.cvtColor(img, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, IMG_SHAPE)
     return (img > 0).astype(np.float64)
+
+
+def split_data(X, y):
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+    return X_train, X_val, y_train, y_val
 
 
 def show_image(img: ImageMatrix) -> None:
