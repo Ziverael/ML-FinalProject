@@ -9,6 +9,6 @@ class _ProjectPaths(BaseModel):
 
 PROJECT_PATHS = _ProjectPaths()
 
-IMG_EXT = ".bmp"
+IMG_EXT = "jpg"
 IMG_SHAPE = (256, 256)
 COLOR_INT_RANGE = 255.0

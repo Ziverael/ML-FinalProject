@@ -17,7 +17,7 @@ def load_image_and_label(filename: str) -> tuple[ImageMatrix, ImageMatrix]:
     if not filename.endswith(IMG_EXT):
         msg = f"Ivalid file extension {filename}. Expected {IMG_EXT}."
         raise ValueError(msg)
-    img_path = PROJECT_PATHS.data / f"image/image{filename}"
+    img_path = PROJECT_PATHS.data / f"image/{filename}"
     if not img_path.is_file():
         msg = f"{img_path} does not exist."
         raise ValueError(msg)
@@ -48,9 +48,10 @@ def split_data(X, y):
     return list(map(lambda x: np.stack(x), (X_train, X_val, y_train, y_val)))
 
 
-def show_image(img: ImageMatrix) -> None:
+def save_image(img: ImageMatrix | ImageNormedMatrix) -> None:
     plt.imshow(img)
-    plt.show()
+    plt.savefig(PROJECT_PATHS.tmp / "sample.png", dpi=200, bbox_inches="tight")
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -58,4 +59,4 @@ if __name__ == "__main__":
 
     example_file = list_data_dir("label")[0].name
     img, lab = load_image_and_label(example_file)
-    show_image(normalize_image(img))
+    save_image(normalize_image(img))
