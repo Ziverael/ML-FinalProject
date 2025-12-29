@@ -239,4 +239,6 @@ def unet(input_size=(256, 256, 3)):
 
     return model
 
-def predict(): ...
+# def predict(model):
+    # model.
+

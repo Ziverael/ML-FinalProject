@@ -14,6 +14,7 @@ from src.constans import IMG_EXT, BATCH_SIZE
 from pydantic import BaseModel, ConfigDict
 from numpy.typing import NDArray
 from typing import Generator
+import numpy as np
 
 class SLRawData(BaseModel):
     """Supervised Learning dataset."""
@@ -73,12 +74,15 @@ class Dataset:
     
 
 def transform(image_label_pairs: list) -> tuple[list[ImageNormedMatrix], list[ImageNormedMatrix]]:
-    normed_images = []
-    normed_labels = []
-    for img, lab in image_label_pairs:
-        normed_images.append(normalize_image(img))
-        normed_labels.append(normalize_label(lab))
-    return normed_images, normed_labels
+    n = len(image_label_pairs)
+    sample_img = normalize_image(image_label_pairs[0][0])
+    sample_lab = normalize_label(image_label_pairs[0][1])
+    images = np.empty((n, *sample_img.shape), dtype=sample_img.dtype)
+    labels = np.empty((n, *sample_lab.shape), dtype=sample_lab.dtype)
+    for i, (img, lab) in enumerate(image_label_pairs):
+        images[i] = normalize_image(img)
+        labels[i] = normalize_label(lab)
+    return images, labels
 
 
 
@@ -93,4 +97,6 @@ if __name__ == "__main__":
     iter_max = 10
     for i in range(iter_max):
         batch = ds_gen.__next__()
+        print(type(batch[0]))
+        print(batch[0].shape)
         print(sys.getsizeof(batch))

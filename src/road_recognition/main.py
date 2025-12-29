@@ -1,16 +1,21 @@
 from src.road_recognition.model import unet
-from src.road_recognition.pipeline import extract, transform
+from src.road_recognition.dataset import Dataset
 from src.road_recognition.model import unet, dice_coef
 import tensorflow as tf
 from keras.callbacks import ModelCheckpoint, TensorBoard
+from src.constans import BATCH_SIZE
 
 if __name__ == "__main__":
-    image_label_pairs = extract()
-    image_label_normed_splited = transform(image_label_pairs)
+    ds = Dataset(batch_size=BATCH_SIZE)
+    ds.split_dataset()
+    train_gen = ds.generate_train_dataset()
+    val_gen = ds.generate_validation_dataset()
 
     model = unet()
 
-    epochs = 100
+    epochs = 20
+    steps_per_epoch = len(ds.train_data.x) // BATCH_SIZE
+    validation_steps = len(ds.val_data.x) // BATCH_SIZE
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
     model_checkpoint = ModelCheckpoint(f'weights_bceloss_{epochs}epochs.h5', monitor='val_loss', save_best_only=True)
 
@@ -25,13 +30,12 @@ if __name__ == "__main__":
         early_stopping,
     ]
 
-    X_train, X_val, y_train, y_val = image_label_normed_splited
     history = model.fit(
-        X_train,
-        y_train,
-        validation_data=(X_val, y_val),
-        epochs=50,
-        batch_size=8,
+        train_gen,
+        validation_data=val_gen,
+        batch_size=32,
+        steps_per_epoch=steps_per_epoch,
+        validation_steps=validation_steps,
         callbacks=callbacks
     )
     model.save("my_model.keras")

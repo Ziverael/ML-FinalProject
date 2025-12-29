@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 
 type ImageMatrix = NDArray[np.uint8]
-type ImageNormedMatrix = NDArray[np.float64]
+type ImageNormedMatrix = NDArray[np.float32]
 
 
 def list_data_dir(subdir: str) -> list[Path]:
@@ -31,13 +31,14 @@ def load_image_and_label(filename: str) -> tuple[ImageMatrix, ImageMatrix]:
 def normalize_image(img: ImageMatrix) -> ImageNormedMatrix:
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, IMG_SHAPE)
-    return img / COLOR_INT_RANGE
+    img = img.astype(np.float32)
+    return (img / COLOR_INT_RANGE)
 
 
 def normalize_label(img: ImageMatrix) -> ImageNormedMatrix:
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.resize(img, IMG_SHAPE)
-    img = (img > 0).astype(np.float64)
+    img = (img > 0).astype(np.float32)
     return img[..., np.newaxis]
 
 
