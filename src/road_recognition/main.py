@@ -34,3 +34,4 @@ if __name__ == "__main__":
         batch_size=8,
         callbacks=callbacks
     )
+    model.save("my_model.keras")
