@@ -1,3 +1,7 @@
+"""
+Based on
+https://github.com/ArkaJU/U-Net-Satellite?tab=readme-ov-file
+"""
 import numpy as np
 import os
 import cv2
