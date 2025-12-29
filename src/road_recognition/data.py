@@ -35,16 +35,17 @@ def normalize_image(img: ImageMatrix) -> ImageNormedMatrix:
 
 
 def normalize_label(img: ImageMatrix) -> ImageNormedMatrix:
-    img = cv2.cvtColor(img, cv2.IMREAD_GRAYSCALE)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.resize(img, IMG_SHAPE)
-    return (img > 0).astype(np.float64)
+    img = (img > 0).astype(np.float64)
+    return img[..., np.newaxis]
 
 
 def split_data(X, y):
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
-    return X_train, X_val, y_train, y_val
+    return list(map(lambda x: np.stack(x), (X_train, X_val, y_train, y_val)))
 
 
 def show_image(img: ImageMatrix) -> None:

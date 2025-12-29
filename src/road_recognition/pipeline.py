@@ -30,7 +30,7 @@ def transform(image_label_pairs: list):
     for img, lab in image_label_pairs:
         normed_images.append(normalize_image(img))
         normed_labels.append(normalize_label(lab))
-    return split_data(normed_images, normalize_label)
+    return split_data(normed_images, normed_labels)
 
 
 if __name__ == "__main__":

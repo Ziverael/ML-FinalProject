@@ -2,36 +2,42 @@ import numpy as np
 import os
 import cv2
 
-from keras.models import Conv2D, Model, MaxPooling2D, Input
-from keras.layers import *
-from keras.optimizers import *
+from keras.models import Model
+from keras.layers import Conv2D, MaxPooling2D, Input, Dropout, UpSampling2D, concatenate
+from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras import backend
+import tensorflow as tf
+from tensorflow.keras import backend as K
 
 import matplotlib.pyplot as plt
 
 
+
 def dice_coef(y_true, y_pred, smooth=1e-6):
-    y_true_f = backend.flatten(y_true)
-    y_pred_f = backend.flatten(y_pred)
-    intersection = backend.sum(y_true_f * y_pred_f)
-    return (2.0 * intersection + smooth) / (
-        backend.sum(y_true_f) + backend.sum(y_pred_f) + smooth
-    )
+    y_true = tf.cast(y_true, tf.float32)
+    y_pred = tf.cast(y_pred, tf.float32)
+    # If sigmoid not in model, uncomment next line
+    # y_pred = tf.sigmoid(y_pred)
+    # Compute Dice per sample, then average
+    axes = (1, 2, 3)
+    intersection = K.sum(y_true * y_pred, axis=axes)
+    denominator = K.sum(y_true + y_pred, axis=axes)
+    dice = (2.0 * intersection + smooth) / (denominator + smooth)
+    return K.mean(dice)
 
 
 def dice_coef_loss(y_true, y_pred):
-    return 1 - dice_coef(y_true, y_pred)
+    return 1.0 - dice_coef(y_true, y_pred)
 
 
 def iou_coef(y_true, y_pred, smooth=1):
-    intersection = backend.sum(backend.abs(y_true * y_pred), axis=[1, 2, 3])
+    intersection = K.sum(K.abs(y_true * y_pred), axis=[1, 2, 3])
     union = (
-        backend.sum(y_true, [1, 2, 3])
-        + backend.sum(y_pred, [1, 2, 3])
+        K.sum(y_true, [1, 2, 3])
+        + K.sum(y_pred, [1, 2, 3])
         - intersection
     )
-    iou = backend.mean((intersection + smooth) / (union + smooth), axis=0)
+    iou = K.mean((intersection + smooth) / (union + smooth), axis=0)
     return iou
 
 
