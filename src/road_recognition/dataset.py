@@ -24,12 +24,15 @@ class SLRawData(BaseModel):
 
 
 class Dataset:
-    def __init__(self, batch_size: int = BATCH_SIZE, shuffle: bool = True) -> None:
+    def __init__(self, batch_size: int = BATCH_SIZE, shuffle: bool = True, size: int | None = None) -> None:
         self.batch_size = batch_size
         self.shuffle = shuffle
 
         self.image_files: list[Path] = list_data_dir("image")
         self.label_files: list[Path] = list_data_dir("label")
+        if size is not None:
+            self.image_files = self.image_files[:size]
+            self.label_files = self.label_files[:size]
         self._check_input_data()
 
         self.filenames: list[str] = [p.stem + p.suffix for p in self.image_files]

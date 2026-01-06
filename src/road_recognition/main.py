@@ -1,12 +1,11 @@
 from src.road_recognition.model import unet
 from src.road_recognition.dataset import Dataset
-from src.road_recognition.model import unet, dice_coef
 import tensorflow as tf
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from src.constans import BATCH_SIZE
 
 if __name__ == "__main__":
-    ds = Dataset(batch_size=BATCH_SIZE)
+    ds = Dataset(batch_size=BATCH_SIZE, size=2000)
     ds.split_dataset()
     train_gen = ds.generate_train_dataset()
     val_gen = ds.generate_validation_dataset()
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     history = model.fit(
         train_gen,
         validation_data=val_gen,
-        batch_size=32,
+        epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         validation_steps=validation_steps,
         callbacks=callbacks

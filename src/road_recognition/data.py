@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 type ImageMatrix = NDArray[np.uint8]
 type ImageNormedMatrix = NDArray[np.float32]
@@ -49,15 +50,14 @@ def split_data(X, y):
     return list(map(lambda x: np.stack(x), (X_train, X_val, y_train, y_val)))
 
 
-def save_image(img: ImageMatrix | ImageNormedMatrix) -> None:
+def save_image(img: ImageMatrix | ImageNormedMatrix, dest: Path) -> None:
     plt.imshow(img)
-    plt.savefig(PROJECT_PATHS.tmp / "sample.png", dpi=200, bbox_inches="tight")
+    plt.savefig(dest, dpi=200, bbox_inches="tight")
     plt.close()
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
 
     example_file = list_data_dir("label")[0].name
     img, lab = load_image_and_label(example_file)
-    save_image(normalize_image(img))
+    save_image(normalize_image(img), PROJECT_PATHS.tmp / "sample.png")
