@@ -1,0 +1,69 @@
+default:
+    just --list
+
+# ===========================
+# Main Targets
+# ===========================
+
+all: paper submission
+
+# ===========================
+# PDF Build Recipes
+# ===========================
+
+paper: latexminted_config
+    @echo "Building {{PDF_PAPER}} from {{TEX_MAIN_PAPER}}"
+    latexmk {{TEX_MAIN_PAPER}}
+
+submission: latexminted_config
+    @echo "Building {{PDF_SUBMISSION}} from {{TEX_MAIN_SUBMISSION}}"
+    latexmk {{TEX_MAIN_SUBMISSION}}
+
+# ===========================
+# Grammar/Spelling
+# ===========================
+
+grammar:
+    # Check that textidote exists
+    textidote --version
+    # Allowed to fail (textidote returns error on grammar issues)
+    -textidote --check en --output html {{TEX_MAIN_PAPER}} > index.html
+    python3 -m http.server
+
+refcheck: paper
+    # Check for unused refs in paper.log
+    grep -e 'refcheck.*Unused' paper.log
+
+# ===========================
+# Minted Lexer Hash Config
+# ===========================
+
+latexminted_config:
+    bash ./tools/check_latexminted_config_exists.sh
+    python3 ./tools/generate_lexers_json.py
+
+# ===========================
+# Support Targets
+# ===========================
+
+abstract:
+    python3 ./tools/extract-abstract.py -i {{TEX_MAIN_PAPER}} -o abstract.md
+
+view-paper:
+    latexmk -pvc {{TEX_MAIN_PAPER}}
+
+view-submission:
+    latexmk -pvc {{TEX_MAIN_SUBMISSION}}
+
+clean:
+    latexmk -C
+    rm -rf _minted "_minted-{{TEX_MAIN_PAPER}}" "_minted-{{TEX_MAIN_SUBMISSION}}"
+    if [ -f "latexminted_config" ]; then python3 ./tools/generate_lexers_json.py; fi
+
+
+# Variables
+
+TEX_MAIN_PAPER := "paper.tex"
+TEX_MAIN_SUBMISSION := "submission.tex"
+PDF_PAPER := "paper.pdf"
+PDF_SUBMISSION := "submission.pdf"
