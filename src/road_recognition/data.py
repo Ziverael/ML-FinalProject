@@ -51,7 +51,7 @@ def list_data_dir(subdir: str) -> list[Path]:
     return [p for p in (PROJECT_PATHS.data / subdir).iterdir()]
 
 
-def load_image_and_label(config: DataConfig, filename: str) -> tuple[ImageMatrix, ImageMatrix]:
+def load_image_and_label(filename: str, config: DataConfig) -> tuple[ImageMatrix, ImageMatrix]:
     filename, _ext = filename.split(".")
     img_path = PROJECT_PATHS.data / f"{config.source}/image/{filename}.{config.image_ext}"
     if not img_path.is_file():
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     data = CONFIG_DEEP_GLOBE
     example_file = list_data_dir(f"{data.source}/label")[0].name
-    img, lab = load_image_and_label(data, example_file)
+    img, lab = load_image_and_label(example_file, data)
     save_image(normalize_image(img), PROJECT_PATHS.tmp / "sample.png")
 
     try:

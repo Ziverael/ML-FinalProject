@@ -1,16 +1,17 @@
-from src.road_recognition.data import (
+from road_recognition.data import (
     list_data_dir,
     load_image_and_label,
     normalize_image,
     normalize_label,
     split_data,
     ImageNormedMatrix,
+    DataConfig,
 )
 import random
-from functools import partialmethod
+from functools import partialmethod, partial
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-from src.constans import IMG_EXT, BATCH_SIZE
+from constans import IMG_EXT, BATCH_SIZE
 from pydantic import BaseModel, ConfigDict
 from numpy.typing import NDArray
 from typing import Generator
@@ -24,12 +25,13 @@ class SLRawData(BaseModel):
 
 
 class Dataset:
-    def __init__(self, batch_size: int = BATCH_SIZE, shuffle: bool = True, size: int | None = None) -> None:
+    def __init__(self, config: DataConfig, batch_size: int = BATCH_SIZE, shuffle: bool = True, size: int | None = None) -> None:
+        self._data_config = config
         self.batch_size = batch_size
         self.shuffle = shuffle
 
-        self.image_files: list[Path] = list_data_dir("image")
-        self.label_files: list[Path] = list_data_dir("label")
+        self.image_files: list[Path] = list_data_dir(f"{config.source}/image")
+        self.label_files: list[Path] = list_data_dir(f"{config.source}/label")
         if size is not None:
             self.image_files = self.image_files[:size]
             self.label_files = self.label_files[:size]
@@ -38,6 +40,9 @@ class Dataset:
         self.filenames: list[str] = [p.stem + p.suffix for p in self.image_files]
         self.train_data: SLRawData | None = None
         self.val_data: SLRawData | None = None
+        self.test_data: SLRawData | None = None
+
+        self._load_image_and_label = partial(load_image_and_label, config=config)
 
     
     def _check_input_data(self) -> None:
@@ -49,12 +54,16 @@ class Dataset:
             raise ValueError(msg)
             
     
-    def split_dataset(self, validation_size: float = 0.2, seed: int | None = None):
+    def split_dataset(self, validation_size: float = 0.2, test_size: float = 0.2, seed: int | None = None):
         train_images, val_images, train_labels, val_labels = train_test_split(
-            self.filenames, self.filenames, test_size=validation_size, random_state=seed
+            self.filenames, self.filenames, test_size=validation_size + test_size, random_state=seed
+        )
+        val_images, test_images, val_labels, test_labels = train_test_split(
+            val_images, val_labels, test_size=(test_size)/(test_size+validation_size), random_state=seed
         )
         self.train_data = SLRawData(x=train_images, y=train_labels)
         self.val_data = SLRawData(x=val_images, y=val_labels)
+        self.test_data = SLRawData(x=test_images, y=test_labels)
     
 
     def _generate_dataset(self, filenames: list[str]) -> Generator:
@@ -64,7 +73,7 @@ class Dataset:
             for i in range(0, len(filenames), self.batch_size):
                 # We assume that names are the same so we take ad hoc the list name
                 batch_files = filenames[i:i+self.batch_size]
-                extracted = list(map(load_image_and_label, batch_files))
+                extracted = list(map(self._load_image_and_label, batch_files))
                 X_normed, y_normed = transform(extracted)
                 yield X_normed, y_normed
     
@@ -73,6 +82,20 @@ class Dataset:
 
     def generate_validation_dataset(self) -> Generator:
         return self._generate_dataset(self.val_data.x)
+
+    def generate_validation_dataset(self) -> Generator:
+        return self._generate_dataset(self.test_data.x)
+    
+    def get_random_sample(self, size: int | None = None) -> tuple[list[ImageNormedMatrix], list[ImageNormedMatrix]]:
+        size: int = len(self.test_data.x) if size is None else size
+        images = self.test_data.x.copy()
+        random.shuffle(images)
+        images = images[:size]
+        extracted = list(map(self._load_image_and_label, images))
+        X_normed, y_normed = transform(extracted)
+        return X_normed, y_normed
+
+
     
     
 
@@ -92,10 +115,12 @@ def transform(image_label_pairs: list) -> tuple[list[ImageNormedMatrix], list[Im
 
 if __name__ == "__main__":
     import sys
-
-    ds = Dataset()
+    from road_recognition.data import CONFIG_KAGGLE_SATELITE
+    ds = Dataset(CONFIG_KAGGLE_SATELITE)
     ds.split_dataset()
     ds_gen = ds.generate_validation_dataset()
+    n = len(ds.val_data.x) + len(ds.train_data.x) + len(ds.test_data.x)
+    print(f"Train: {len(ds.train_data.x) / n:.2f}; Test: {len(ds.test_data.x) / n:.2f}; Val: {len(ds.val_data.x) / n:.2f}")
     print(type(ds_gen))
     iter_max = 10
     for i in range(iter_max):
