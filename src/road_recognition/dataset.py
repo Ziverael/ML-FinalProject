@@ -3,7 +3,6 @@ from road_recognition.data import (
     load_image_and_label,
     normalize_image,
     normalize_label,
-    split_data,
     ImageNormedMatrix,
     DataConfig,
 )
@@ -11,7 +10,7 @@ import random
 from functools import partialmethod, partial
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-from constans import IMG_EXT, BATCH_SIZE
+from constans import BATCH_SIZE
 from pydantic import BaseModel, ConfigDict
 from numpy.typing import NDArray
 from typing import Generator
@@ -115,8 +114,8 @@ def transform(image_label_pairs: list) -> tuple[list[ImageNormedMatrix], list[Im
 
 if __name__ == "__main__":
     import sys
-    from road_recognition.data import CONFIG_KAGGLE_SATELITE
-    ds = Dataset(CONFIG_KAGGLE_SATELITE)
+    from road_recognition.data import CONFIG_DEEP_GLOBE
+    ds = Dataset(CONFIG_DEEP_GLOBE)
     ds.split_dataset()
     ds_gen = ds.generate_validation_dataset()
     n = len(ds.val_data.x) + len(ds.train_data.x) + len(ds.test_data.x)
