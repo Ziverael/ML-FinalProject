@@ -1,0 +1,9 @@
+collection-latex
+collection-latexrecommended
+collection-latexextra
+collection-fontsrecommended
+collection-fontsextra
+collection-langenglish
+collection-langpolish
+latexmk
+python-pygments

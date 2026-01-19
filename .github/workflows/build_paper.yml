@@ -13,9 +13,6 @@ jobs:
 
   build-texlive-latest:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./document
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -29,22 +26,21 @@ jobs:
 
     - name: Create .latexminted_config file
       run: |
+        cd document
         bash ./tools/create_latexminted_config.sh
         just latexminted_config
 
-    # Uses the latest TeXLive distribution (currently with minted v3+)
     - name: Compile paper
-    - uses: xu-cheng/texlive-action@v3
+      uses: xu-cheng/latex-action@v4
       with:
-        run: |
-          latexmk -pdf -file-line-error -halt-on-error -interaction=nonstopmode paper.tex
+        root_file: paper.tex
+        working_directory: document
 
-
-    # Uses the latest TeXLive distribution (currently with minted v3+)
     - name: Compile submission
-      uses: xu-cheng/latex-action@master
+      uses: xu-cheng/latex-action@v4
       with:
-        root_file: ./document/submission.tex
+        root_file: submission.tex
+        working_directory: document
 
     - name: Release
       if: ${{ github.event_name == 'push' }}
@@ -56,34 +52,5 @@ jobs:
         name: Release ${{ github.run_number }}
         tag_name: release-${{ github.run_number }}
         files: |
-          paper.pdf
-          submission.pdf
-  build-texlive-2024:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./document
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
-
-    - name: Install just
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y just
-
-    # Uses an older TeXLive distribution (with minted v2.9)
-    - name: Compile paper
-      uses: xu-cheng/latex-action@master
-      with:
-        docker_image: ghcr.io/xu-cheng/texlive-full:20240901
-        root_file: ./document/paper.tex
-
-    # Uses an older TeXLive distribution (with minted v2.9)
-    - name: Compile submission
-      uses: xu-cheng/latex-action@master
-      with:
-        docker_image: ghcr.io/xu-cheng/texlive-full:20240901
-        root_file: ./document/submission.tex
+          document/paper.pdf
+          document/submission.pdf
