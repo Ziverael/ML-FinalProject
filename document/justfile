@@ -67,3 +67,9 @@ TEX_MAIN_PAPER := "paper.tex"
 TEX_MAIN_SUBMISSION := "submission.tex"
 PDF_PAPER := "paper.pdf"
 PDF_SUBMISSION := "submission.pdf"
+
+
+alias p := paper
+alias vp := view-paper
+alias s := submission
+alias vs := view-submission

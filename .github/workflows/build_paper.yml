@@ -10,6 +10,7 @@ on: [push, pull_request]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+
   build-texlive-latest:
     runs-on: ubuntu-latest
 
@@ -18,22 +19,28 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v3
 
+    - name: Install just
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y just
+
     - name: Create .latexminted_config file
       run: |
+        cd document
         bash ./tools/create_latexminted_config.sh
-        make .latexminted_config
+        just latexminted_config
 
-    # Uses the latest TeXLive distribution (currently with minted v3+)
     - name: Compile paper
-      uses: xu-cheng/latex-action@master
+      uses: xu-cheng/latex-action@v4
       with:
         root_file: paper.tex
+        working_directory: document
 
-    # Uses the latest TeXLive distribution (currently with minted v3+)
     - name: Compile submission
-      uses: xu-cheng/latex-action@master
+      uses: xu-cheng/latex-action@v4
       with:
         root_file: submission.tex
+        working_directory: document
 
     - name: Release
       if: ${{ github.event_name == 'push' }}
@@ -45,49 +52,5 @@ jobs:
         name: Release ${{ github.run_number }}
         tag_name: release-${{ github.run_number }}
         files: |
-          paper.pdf
-          submission.pdf
-  build-texlive-2024:
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
-
-    # Uses an older TeXLive distribution (with minted v2.9)
-    - name: Compile paper
-      uses: xu-cheng/latex-action@master
-      with:
-        docker_image: ghcr.io/xu-cheng/texlive-full:20240901
-        root_file: paper.tex
-
-    # Uses an older TeXLive distribution (with minted v2.9)
-    - name: Compile submission
-      uses: xu-cheng/latex-action@master
-      with:
-        docker_image: ghcr.io/xu-cheng/texlive-full:20240901
-        root_file: submission.tex
-  build-texlive-2022:
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
-
-    # Uses an older TeXLive distribution (with minted v2.6)
-    - name: Compile paper
-      uses: xu-cheng/latex-action@v3
-      with:
-        docker_image: ghcr.io/xu-cheng/texlive-full:20221101
-        root_file: paper.tex
-        latexmk_shell_escape: true
-
-    # Uses an older TeXLive distribution (with minted v2.6)
-    - name: Compile submission
-      uses: xu-cheng/latex-action@v3
-      with:
-        docker_image: ghcr.io/xu-cheng/texlive-full:20221101
-        root_file: submission.tex
-        latexmk_shell_escape: true
+          document/paper.pdf
+          document/submission.pdf
