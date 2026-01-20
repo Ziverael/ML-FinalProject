@@ -6,6 +6,7 @@ import numpy as np
 from road_recognition.dataset import Dataset
 from road_recognition.data import DataSource, DataConfig
 from constans import BATCH_SIZE, PROJECT_PATHS
+from road_recognition.model import iou_coef, dice_coef
 import typer
 
 app = typer.Typer(
@@ -32,7 +33,13 @@ def main(
     ds.split_dataset()
     images_to_show = 10
     test_sample, test_labels = ds.get_random_sample(images_to_show)
-    model = load_model(PROJECT_PATHS.models / model_path)
+    model = load_model(
+        PROJECT_PATHS.models / model_path,
+        custom_objects={
+            "iou_coef": iou_coef,
+            "dice_coef": dice_coef,
+        }
+    )
 
     random.seed(random_seed)
 

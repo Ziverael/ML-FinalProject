@@ -184,3 +184,14 @@ MODELS_MAP = {
     "unet_base_1": {"model": unet_base1, "optimizer": Adam(), "loss": "binary_crossentropy"},
     "unet_modified_1": {"model": unet_modified1, "optimizer": Adam(), "loss": dice_coef_loss},
 }
+
+def get_model(name: str) -> Model:
+    if (model_config:= MODELS_MAP.get(name, None)) is not None:
+        model_init = model_config["model"]
+        model = model_init()
+        model.compile(
+            optimizer=model_config["optimizer"],
+            loss=model_config["loss"],
+            metrics=["accuracy", iou_coef, dice_coef]
+        )
+        return model
