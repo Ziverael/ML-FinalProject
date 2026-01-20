@@ -181,6 +181,6 @@ def unet_base1(input_shape=(256, 256, 3), output_layer=1):
 
 
 MODELS_MAP = {
-    "unet_base_1": {"model": unet_base1, "optimizer": Adam(), "loss": "binary_crossentropy", "metrics":["accuracy"]},
-    "unet_modified_1": {"model": unet_modified1, "optimizer": Adam(), "loss": dice_coef_loss, "metrics":[dice_coef, iou_coef]},
+    "unet_base_1": {"model": unet_base1, "optimizer": Adam(), "loss": "binary_crossentropy"},
+    "unet_modified_1": {"model": unet_modified1, "optimizer": Adam(), "loss": dice_coef_loss},
 }

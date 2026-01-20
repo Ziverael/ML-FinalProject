@@ -32,7 +32,7 @@ def main(
     ds.split_dataset()
     images_to_show = 10
     test_sample, test_labels = ds.get_random_sample(images_to_show)
-    model = load_model(model_path)
+    model = load_model(PROJECT_PATHS.models / model_path)
 
     random.seed(random_seed)
 
