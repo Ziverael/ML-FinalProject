@@ -3,7 +3,7 @@ import tensorflow as tf
 from road_recognition.data import DataSource, DataConfig
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.models import Model
-from road_recognition.model import MODELS_MAP, iou_coef, dice_coef
+from road_recognition.models.utils import MODELS_MAP, iou_coef, dice_coef
 from constans import BATCH_SIZE, PROJECT_PATHS
 import typer
 from typing import Literal

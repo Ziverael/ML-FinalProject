@@ -6,7 +6,7 @@ import numpy as np
 from road_recognition.dataset import Dataset
 from road_recognition.data import DataSource, DataConfig
 from constans import BATCH_SIZE, PROJECT_PATHS
-from road_recognition.model import iou_coef, dice_coef
+from road_recognition.models.metrics import iou_coef, dice_coef, dice_coef_loss
 import typer
 
 app = typer.Typer(
@@ -29,7 +29,7 @@ def main(
     model_path: str,
     random_seed: int | None = None,
 ):
-    ds = Dataset(get_dataset(dataset), batch_size=BATCH_SIZE, size=2000)
+    ds = Dataset(get_dataset(dataset), batch_size=BATCH_SIZE, size=10_000)
     ds.split_dataset()
     images_to_show = 10
     test_sample, test_labels = ds.get_random_sample(images_to_show)
@@ -38,6 +38,7 @@ def main(
         custom_objects={
             "iou_coef": iou_coef,
             "dice_coef": dice_coef,
+            "dice_coef_loss": dice_coef_loss,
         }
     )
 

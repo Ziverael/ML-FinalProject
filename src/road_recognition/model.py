@@ -1,7 +1,3 @@
-"""
-Based on
-https://github.com/ArkaJU/U-Net-Satellite?tab=readme-ov-file
-"""
 import numpy as np
 import os
 import cv2
@@ -181,8 +177,10 @@ def unet_base1(input_shape=(256, 256, 3), output_layer=1):
 
 
 MODELS_MAP = {
-    "unet_base_1": {"model": unet_base1, "optimizer": Adam(), "loss": "binary_crossentropy"},
-    "unet_modified_1": {"model": unet_modified1, "optimizer": Adam(), "loss": dice_coef_loss},
+    "unet_base_1_bc": {"model": unet_base1, "optimizer": Adam(), "loss": "binary_crossentropy"},
+    "unet_base_1_dice": {"model": unet_base1, "optimizer": Adam(), "loss": dice_coef_loss},
+    "unet_modified_1_bc": {"model": unet_modified1, "optimizer": Adam(), "loss": "binary_crossentropy"},
+    "unet_modified_1_dice": {"model": unet_modified1, "optimizer": Adam(), "loss": dice_coef_loss},
 }
 
 def get_model(name: str) -> Model:
