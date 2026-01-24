@@ -43,6 +43,7 @@ dev = [
 
 [project.scripts]
 train = "road_recognition.train:app"
+predict = "road_recognition.prediction:app"
 
 [tool.black]
 line-length = 80

@@ -167,7 +167,7 @@
 \begin{document}
 
 %% Title information
-\title[Short Title]{Road extraction from satellite images utilizing U-net architecture}       %% [Short Title] is optional;
+\title[Road extraction with U-Net]{Road extraction from satellite images utilizing U-Net architecture}       %% [Short Title] is optional;
                                       %% when present, will be used in
                                       %% header instead of Full Title.
 \subtitle{}                   %% \subtitle is optional
@@ -210,8 +210,7 @@
 
 % (http://www.easterbrook.ca/steve/2010/01/how-to-write-a-scientific-abstract-in-six-easy-steps/)
 
-Accurate detection of road networks in satellite imagery is a fundamental task for geographic information systems, urban planning, and autonomous navigation. However, variability in lighting conditions, occlusions, and background complexity makes reliable road segmentation a challenging problem. In this paper, we investigate the use of the U-Net convolutional neural network, originally developed for biomedical image segmentation, for the task of road detection in satellite images. The proposed approach formulates road extraction as a pixel-wise semantic segmentation problem and leverages the characteristic encoder-decoder architecture with skip connections to preserve both contextual and spatial information. We train and evaluate the U-Net model on satellite imagery datasets and assess its performance using standard segmentation metrics. The results demonstrate that U-Net is capable of accurately identifying road structures despite visual noise and complex surroundings. These findings suggest that architectures initially designed for medical imaging can be effectively adapted to remote sensing applications. The study is limited to supervised learning on annotated datasets and does not address real-time performance or cross-dataset generalization.
-\authorTwo{Add note about modified Unet}
+Accurate detection of road networks in satellite imagery is a fundamental task for geographic information systems, urban planning, and autonomous navigation. However, variability in lighting conditions, occlusions, and background complexity makes reliable road segmentation a challenging problem. In this paper, we investigate the use of the U-Net convolutional neural network, originally developed for biomedical image segmentation, for the task of road detection in satellite images. The proposed approach formulates road extraction as a pixel-wise semantic segmentation problem and leverages the characteristic encoder-decoder architecture with skip connections to preserve both contextual and spatial information. We train and evaluate the U-Net model on satellite imagery datasets and assess its performance using standard segmentation metrics. The results demonstrate that U-Net is capable of accurately identifying road structures despite visual noise and complex surroundings. These findings suggest that architectures initially designed for medical imaging can be effectively adapted to remote sensing applications. The study is limited to supervised learning on annotated datasets and does not address real-time performance or cross-dataset generalization. This article also studies the other variants of the U-Net architecture in this challenge.
 \end{abstract}
 
 % Only add ACM notes and keywords in camera ready version
@@ -247,48 +246,110 @@ Accurate detection of road networks in satellite imagery is a fundamental task f
 \maketitle
 
 \section{Introduction}
-Ten artykuł przeznaczony jest do analizy sieci U-Net będącej jedną z wariantów Convolution Neural Network oraz jej wykorzystaniu w celu wykrywania dróg na zdjęciach satelitarnych. Sieć ta szczególnie znana jest w zastosowaniach medycznych.
-\authorSix{Do przepisania}
-	
-U-Net is a specialized convolutional neural network (CNN) originally designed for image segmentation, particularly in biomedical imaging, where precise delineation of structures like organs, tumors, or cells is essential. It was proposed in Ronneberge et la.\cite{Ronneberger2015}. Its name comes from the distinctive U-shaped architecture, which consists of two main pathways: a contracting path (encoder) that captures contextual information by progressively downsampling the image, and an expanding path (decoder) that reconstructs spatial details by upsampling back to the original image size. Figure~\ref{diagram} This symmetrical design enables the U-Net to combine both high-level semantic information and fine-grained localization in the final pixel-wise segmentation map.
+U-Net is a specialized convolutional neural network (CNN) originally designed for image segmentation, particularly in biomedical imaging, where precise delineation of structures like organs, tumors, or cells is essential. It was proposed in Ronneberge et la.\cite{Ronneberger2015}. Its name comes from the distinctive U-shaped architecture, which consists of two main pathways: a contracting path (encoder) that captures contextual information by progressively downsampling the image, and an expanding path (decoder) that reconstructs spatial details by upsampling back to the original image size, what one can observe in Fig.~\ref{fig:unet}. This symmetrical design enables the U-Net to combine both high-level semantic information and fine-grained localization in the final pixel-wise segmentation map.
 
 \begin{figure}[htp]
     \centering
     \includegraphics[width=12cm]{diagram}
-    \caption{Diagram of U-net archtecture (from Ibtehaz et al. \cite{Ibtehaz2019}).}
-    \label{fig:galaxy}
+    \caption{Diagram of U-net archtecture (from Ibtehaz et al. \cite{Ibtehaz2019})}
+    \label{fig:unet}
 \end{figure}
 
 The contracting path comprises a series of convolutional layers with activation functions (e.g., ReLU) and pooling operations that reduce spatial dimensions while increasing feature depth. This effectively extracts hierarchical features from the input. At the bottom of the “U” lies the bottleneck, which contains the most abstract representation of the input features. The expanding path then employs up-convolutions (also known as transposed convolutions) to restore spatial resolution. Importantly, it utilizes skip connections from corresponding levels of the encoder to preserve spatial information that might otherwise be lost during downsampling. These skip connections concatenate high-resolution encoder feature maps with decoder features, thus improving localization accuracy in the segmentation output.
 
+On the other hand, an interesting example to consider may be the \(\Psi\)-Net described by Kuang et al.~\cite{Kuang2020} for the prediction of intracerebral haemorrhage.
+As shown in Fig.~\ref{fig:psinet}, the name goes from \(\Psi\)-shaped archtecture. The architecture is built upon the U-Net encoder-decoder framework, but extends it by incorporating multi-slice input to capture spatial contextual information. Instead of a single slice, the network processes three consecutive slices—the target slice and its two adjacent slices. Since feature extraction is consistent across slices, the encoders share parameters, which both preserves contextual information and limits model complexity.
 
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=12cm]{psinet}
+    \caption{Diagram of \(\Psi\)-net archtecture}
+    \label{fig:psinet}
+\end{figure}
+
+
+To enhance feature representation, \(\Psi\)-Net introduces attention mechanisms on both the encoding and decoding sides. On the encoding side, self-attention blocks replace the standard convolutional layers of U-Net, enabling the model to suppress irrelevant information and strengthen global feature extraction. These blocks leverage higher-level feature maps to generate attention weights for lower layers, inspired by residual attention learning, while avoiding excessive network depth.
+
+On the decoding side, contextual-attention blocks are employed to integrate spatial context from neighboring slices and guide the model to focus on the target region, particularly along object boundaries. Unlike self-attention, which mainly captures intra-slice information, contextual attention utilizes inter-slice features to improve local detail restoration. Together, these attention mechanisms allow \(\Psi\)-Net to effectively balance global contextual modeling and precise boundary recovery.
+
+Facilitating the \(\Psi\)-Net architecture for image path extraction presents several advantages. The multi-slice (or multi-context) input design allows the model to leverage spatial continuity, which is essential for identifying long, narrow, and potentially fragmented paths in high-resolution images. The use of shared encoders ensures consistent feature extraction while maintaining a manageable model size. Additionally, the self-attention mechanism within the encoder enhances the modeling of global features, aiding in the differentiation of paths from visually similar background elements. Meanwhile, the contextual-attention mechanism in the decoder enhances the recovery of local details, particularly along path boundaries and intersections. Collectively, these features promote improved path continuity and boundary accuracy compared to standard U-Net architectures.
+
+However, \(\Psi\)-Net also has several limitations concerning path extraction tasks. The dependence on multi-context inputs adds complexity to data preparation and may hinder generalization when contextual information is either inconsistent or lacking. The implementation of attention mechanisms introduces additional computational demands and can lead to increased sensitivity in training based on hyperparameter selection. Furthermore, although \(\Psi\)-Net enhances segmentation quality, it does not explicitly impose topological constraints, which are crucial for maintaining path connectivity. Consequently, post-processing steps or topology-aware loss functions may still be necessary to achieve fully connected and graph-consistent path representations.
 
 \vspace{.5em}
 \noindent
 Our contributions are:
-\grosser{Always state your contributions explicitly: (A) this makes it
-easy for the reader to understand what novelty is presented, and (B)
-these contributions help you to focus. In particular, the objective of
-the remaining paper should be to support the claims stated here.
-}
 \begin{itemize}
-	\item Train benchmark model on two datasets 
-	\item Implement modified U-Net (\autoref{sec:implementation})
-	\item Compare results
+	\item Implement \(\Psi\)-Net for path extraction
+	\item Implement dedicated for path extraction U-Net
+  \item Train and compare results of those models (\autoref{sec:results})
 \end{itemize}
 
 \section{Our New Idea}
+Firstly, we tested how good can be \(\Psi\)-Net in road extraction task in comparison to standard U-Net archtecture. Implementation of the \(\Psi\)-Net model follows the architecture defined in the aforementioned article.
+On the other hand, in comparison to the baseline U-Net architecture, the proposed dedicated U-Net introduces several structural enhancements aimed at improving the segmentation of thin and elongated objects, such as roads. One key modification is the reduction of encoder depth from four to three downsampling stages, which minimizes excessive spatial resolution loss in deeper layers and helps retain fine-grained structural details. Furthermore, the bottleneck incorporates dilated convolutions, effectively enlarging the receptive field without additional downsampling. This design allows the model to capture long-range contextual dependencies essential for maintaining road continuity while mitigating the fragmentation often encountered in standard U-Net configurations. 
+
+The decoder employs straightforward upsampling followed by convolution instead of transposed convolutions, which decreases computational complexity and mitigates checkerboard artifacts. Additionally, dedicated U-Net features a more streamlined and task-oriented design compared to the baseline. The reduced parameter count results in lower computational expenses and faster convergence, while enhanced regularization at the bottleneck through increased dropout improves generalization. Unlike the more generic design of the baseline, which disperses dropout across multiple layers and aggressively downsamples feature maps, the modified architecture focuses on preserving spatial details and aggregating global context. Consequently, the proposed model is better suited for road extraction tasks, producing sharper boundaries and more continuous predictions, particularly in challenging areas with narrow or partially occluded road segments.
 
 
-\section{Implementation}
-\label{sec:implementation}
+\section{Results}\label{sec:results}
+To establish a reference point, the U-net implementation proposed by Tung Dinh~\cite{github.unet} was utilized. This model and the developed implementations were retrained on two distinct datasets. The first dataset comprised 100 satellite images and \(1\,000\) artificially generated images~\cite{kaggle.dataset.image_road}. The second dataset was the DeepGlobe 2018 Dataset~\cite{Demir2018}, which contains \(6\,226\) satellite images.
+
+Three metrics were used for evaluation. The first was accuracy.
+\[
+acccuracy=\frac{TP+TN}{N},
+\]
+where \(TP\) are true positive, \(TN\) true negative and \(N\) number of classified objects. Next, Intersection over Union (IoU) calculates the amount of overlapping area between two bounding boxes - predicted bounding box and ground truth. The last one is Dice coefficient which is also similarity metric, but is more preferable in imbalanced datasets.
+
+Training and evaluation yielded several notable observations. The models demonstrated higher accuracy values on the DeepGlobe dataset, with accuracy ranging from 0.96 to 0.98 across training steps. In contrast, the Kaggle dataset produced accuracy values between 0.9 and 0.92. This advantage is also reflected in the dice coefficient metric, although the distinction between datasets is less visually apparent. Additionally, models employing binary cross-entropy as a loss function outperformed those using dice coefficient loss for both metrics considered.
+
+Fig.~\ref{fig:metrics} demonstrates that U-Net slightly outperforms the other two models in terms of the dice coefficient, accuracy, and intersection over union (IoU) metrics. The baseline model performs worse in all metrics except for the IoU coefficient, where it surpasses \(\Psi\)-Net. Regarding loss, the \(\Psi\)-Net model exhibits the most unstable convergence. The test data results are consistent with those observed in the validation data and are presented in Table~\ref{tab:test}. Notably, there is a substantial difference in training times: the baseline model required approximately 1 hour, U-Net required 3 hours, and \(\Psi\)-Net required 12 hours. Given these metric results, the \(\Psi\)-Net model does not justify the increased computational cost without further improvements.
+
+\begin{figure}[htp]
+    \includegraphics[width=6.5cm]{acc.png}
+    \includegraphics[width=6.5cm]{dice.png}
+    
+    \includegraphics[width=6.5cm]{iou.png}
+    \includegraphics[width=6.5cm]{loss.png}
+    \caption{Validation metrics comparison for all three models with dice loss on the DeepGlobe dataset. Those models are U-Net (blue, alias unet\_base\_1\_dice\_dg), dedicated U-Net (green, alias unet\_modified\_1\_dice\_dg), and \(\Psi\)-Net (red, psinet\_dice\_dg).}
+    \label{fig:metrics}
+\end{figure}
+
+\begin{table}
+\begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|p{3cm}|  }
+\hline
+\multicolumn{4}{|c|}{Test metrics} \\
+\hline
+Model& accuracy &dice & iou \\
+\hline
+U-Net & 0.9705 & 0.6242 &0.4775 \\
+Dedicated U-Net & 0.9719 & 0.6521   & 0.505 \\
+\(\Psi\)-Net & 0.971 & 0.6259 & 0.4765 \\
+\hline
+\end{tabular}
+\caption{Test dataset metrics evaluation on trained models}
+\label{tab:test}
+\end{table}
+
+From Fig.~\ref{fig:preds}, it is unclear which model performed best. On the one hand, the baseline seems to find roads most accurately, but on the other hand, it classified many more random objects as road fragments. Furthermore, the road lines in its case are the thickest. The other two models generated thinner lines, as if they were trying to focus on finding the centreline of the roads. In this comparison, \(\Psi\)-Net performed the worst. It seemed very sparing in indicating roads.
+
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=12cm]{comparisons.png}
+    \caption{Comparison of prediction results for three different satellite images using trained models.}
+    \label{fig:preds}
+\end{figure}
+
 
 \section{Related Work}
 Automatic road extraction from satellite imagery has been an active area of research for several decades, with traditional approaches often relying on classical image processing and GIS-based techniques. Early works emphasized feature-based methods, incorporating edge detection, morphological operations, and contextual information to delineate road networks et la. Mena \cite{Mena2003}. Subsequent surveys highlighted the progression toward machine learning and deep learning approaches, which offer superior accuracy and adaptability to complex urban and rural environments \cite{Wang2016}, \cite{Chen2022}.
 
-Recent developments have centered on convolutional neural network (CNN) architectures adapted for semantic segmentation tasks. The U-Net model introduced by Ronneberger et al. \cite{Ronneberger2015} demonstrated that a symmetric encoder-decoder structure with skip connections allows precise localization while effectively utilizing limited annotated data. Extensions and modifications of U-Net, including MultiResUNet \cite{Ibtehaz2019}, C-UNet \cite{Hou2021}, and attention-assisted U-Net variants \cite{Akhtarmanesh2024}, have been proposed to enhance feature representation and mitigate challenges such as scale variation and occlusions in remote sensing imagery.
+Recent developments have centered on convolutional neural network (CNN) architectures adapted for semantic segmentation tasks. The U-Net model introduced by Ronneberger et al. \cite{Ronneberger2015} demonstrated that a symmetric encoder-decoder structure with skip connections allows precise localization while effectively utilizing limited annotated data. Extensions and modifications of U-Net, including MultiResU-Net \cite{Ibtehaz2019}, C-U-Net \cite{Hou2021}, and attention-assisted U-Net variants \cite{Akhtarmanesh2024}, have been proposed to enhance feature representation and mitigate challenges such as scale variation and occlusions in remote sensing imagery. Different approachs of extending by multiple encoders, U-net networks and 3D U-nets were reviewed et la. Jiangtao\cite{Jiangtao2025}.
 
 \section{Conclusion}
+The paper analyses the potential applications of the U-Net architecture for road recognition. A basic model with modified numbers of neurons and reductions in redundant layers was proposed. It was also decided to investigate the \(\Psi\)-Net model in this application. The models were tested on two different datasets and with two different loss functions: binary cross-entropy and dice coefficient loss. The proposed models achieved an accuracy of 0.9719 and 0.971 and a dice coefficient of 0.6521 and 0.6529 for Dedicated U-Net and \(\Psi\)-Net, respectively, which were better results than the default U-Net. However, a comparison of the actual road masks obtained suggests that the models require further improvement. In particular, \(\Psi\)-Net does not seem to be a particularly encouraging model for training, due to the fact that its training took four times longer than for the Dedicated U-Net.
+
 
 %% Acknowledgments
 \begin{acks} %% acks environment is optional

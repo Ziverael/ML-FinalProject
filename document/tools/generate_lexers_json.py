@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import os
 import hashlib
 import json
+import os
 from pathlib import Path
+
 
 LEXER_DIR = "tools/lexers"
 
@@ -30,15 +31,16 @@ def generate_lexers_json():
 
     return custom_lexers
 
+
 def generate_json_file():
     # Load existing config, if it exists
     config_path = Path(OUTPUT_JSON)
     if config_path.exists():
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config = json.load(f)
     else:
         config = {}
-    
+
     # Update only the lexers
     config["custom_lexers"] = generate_lexers_json()
 
@@ -47,6 +49,7 @@ def generate_json_file():
         json.dump(config, file, indent=2)
 
     print(f"JSON file created at {OUTPUT_JSON}")
+
 
 if __name__ == "__main__":
     generate_json_file()
