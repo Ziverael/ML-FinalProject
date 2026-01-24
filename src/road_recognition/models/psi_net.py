@@ -1,9 +1,15 @@
-import tensorflow as tf
 from keras.layers import (
-    Input, Conv2D, MaxPooling2D, UpSampling2D,
-    Concatenate, Activation, Multiply, BatchNormalization
+    Activation,
+    BatchNormalization,
+    Concatenate,
+    Conv2D,
+    Input,
+    MaxPooling2D,
+    Multiply,
+    UpSampling2D,
 )
 from keras.models import Model
+
 
 def conv_block(x, filters, kernel_size=3):
     x = Conv2D(filters, kernel_size, padding="same")(x)
@@ -15,6 +21,7 @@ def conv_block(x, filters, kernel_size=3):
     x = Activation("relu")(x)
     return x
 
+
 def attention_gate(skip, gating, filters):
     theta_x = Conv2D(filters, 1, padding="same")(skip)
     phi_g = Conv2D(filters, 1, padding="same")(gating)
@@ -24,6 +31,7 @@ def attention_gate(skip, gating, filters):
     psi = Activation("sigmoid")(psi)
 
     return Multiply()([skip, psi])
+
 
 def psinet(input_shape=(256, 256, 3)):
     inputs = Input(input_shape)
