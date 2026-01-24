@@ -167,7 +167,7 @@
 \begin{document}
 
 %% Title information
-\title[Short Title]{Road extraction from satellite images utilizing U-net architecture}       %% [Short Title] is optional;
+\title[Road extraction with U-Net]{Road extraction from satellite images utilizing U-Net architecture}       %% [Short Title] is optional;
                                       %% when present, will be used in
                                       %% header instead of Full Title.
 \subtitle{}                   %% \subtitle is optional
@@ -296,15 +296,38 @@ The decoder employs straightforward upsampling followed by convolution instead o
 \section{Results}\label{sec:results}
 Aby obrać punkt odniesienia skorzystano z implementacji U-net zaproponowaną przez Tung Dinh~\cite{github.unet}. Przetrenowaliśmy ten model oraz nasze implementacje na dwóch różnych zbiorach danych. Pierwszy z nich składał się ze 100 zdjęć satelitarnych oraz 1000 sztucznie wygenerowanych obrazków~\cite{kaggle.dataset.image_road}. Drugi zbrór to DeepGlobe 2018 Dataset~\cite{Demir2018} zawerający 6226 zdjęć satelitarnych.
 
-Training and evaluations provide us series of useful observatrions. Po pierwsze modele uzyskiwały lepsze wartości accuracy dla danych z DeepGlobe. Wartości dla nich w kolejnych krokach treningu oscylowały w przediale \((0.96,0.98)\), gdy dla zbioru z Kaggle wyniki były w przedziale \((0.9, 0.92)\). Przewagę widać także w metryce dice coefficient, choć tutaj nie ma wyraźnie wizulanej granicy między datasetami. Ponadto lepsze wyniki również osiągały modele wykorzystujące binary-crossentropy jako funkcję straty, niż te, które obrały dice coefficient loss. Co ciekawe dotyczy to obu omawianych metryk.
+Training and evaluations provide us series of useful observatrions. Po pierwsze modele uzyskiwały lepsze wartości accuracy dla danych z DeepGlobe. Wartości dla nich w kolejnych krokach treningu oscylowały w przediale \((0.96,0.98)\), gdy dla zbioru z Kaggle wyniki były w przedziale \((0.9, 0.92)\). Przewagę widać także w metryce dice coefficient, choć tutaj nie ma wyraźnie wizulanej granicy między datasetami.  Ponadto lepsze wyniki również osiągały modele wykorzystujące binary-crossentropy jako funkcję straty, niż te, które obrały dice coefficient loss. Co ciekawe dotyczy to obu omawianych metryk.
+
+Z Fig.~\ref{fig:metrics} zauważyć można zarówno w metryce dice coefficient oraz accuracy i iou coefficient dedicate U-Net nieznacznie pokonuje pozostałe dwa modele. Model bazowy pozstaje w tyle we wszystkich metrykach z wyłączeniem iou coefficient, dla którego uzyskuje lepsze wyniki, niż \(\Psi\)-Net. Obserwjąc stratę, widać, że model \(\Psi\)-Net zbiegał najbardziej niestabilinie. Jednocześnie warto zauważyć jak znacząca jest różnica w czasie treningu. Kiedy czas treningu baseline wyniósł około 1h, trening dedicated U-Net 3h to trening \(\Psi\)-Net już 12 h. Uwzględniając wyniki metryk, zdaje się, że model \(\Psi\)-Net nie jest wart, aż takich kosztów, a przynajmniej bez rozważenia jakichś usprawnień.
+\authorFive{Dodać jeszcze test eval}
+\begin{figure}[htp]
+    \includegraphics[width=6.5cm]{acc.png}
+    \includegraphics[width=6.5cm]{dice.png}
+    
+    \includegraphics[width=6.5cm]{iou.png}
+    \includegraphics[width=6.5cm]{loss.png}
+    \caption{Validation metrics comparison for all three models with dice loss and DeepGlobe dataset. Those models are U-Net (blue, alias unet\_base\_1\_dice\_dg), dedicated U-Net (green, alias unet\_modified\_1\_dice\_dg), and \(\Psi\)-Net (red, psinet\_dice\_dg).}
+    \label{fig:metrics}
+\end{figure}
+
+Z Fig.~\ref{fig:preds} można mieć wątpliwości, który z modeli poradził sobie najlepiej. Z jednej strony baseline zdaje się najdokładniej znajdować drogi, jednak z drugiej strony sklasyfikował znacznie więcej przypadkowych obiektów jako fragmenty dróg. Ponadto linie dróg w jego przypadku są najgrubsze. Pozostałe dwa modele generowały cieńsze linie, jakby próbowały skupić się na szukaniu centerline dróg. Z tego porównania \(\Psi\)-Net wypadł najgorzej. Zdawał się bardzo oszczędny we wskazywaniu dróg.
+
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=12cm]{comparisons.png}
+    \caption{Porównanie rezultatów predykcji 3 różnych zdjęć satelitarnych z wykorzystaniem wytrenowanych modeli.}
+    \label{fig:preds}
+\end{figure}
 
 
 \section{Related Work}
 Automatic road extraction from satellite imagery has been an active area of research for several decades, with traditional approaches often relying on classical image processing and GIS-based techniques. Early works emphasized feature-based methods, incorporating edge detection, morphological operations, and contextual information to delineate road networks et la. Mena \cite{Mena2003}. Subsequent surveys highlighted the progression toward machine learning and deep learning approaches, which offer superior accuracy and adaptability to complex urban and rural environments \cite{Wang2016}, \cite{Chen2022}.
 
-Recent developments have centered on convolutional neural network (CNN) architectures adapted for semantic segmentation tasks. The U-Net model introduced by Ronneberger et al. \cite{Ronneberger2015} demonstrated that a symmetric encoder-decoder structure with skip connections allows precise localization while effectively utilizing limited annotated data. Extensions and modifications of U-Net, including MultiResUNet \cite{Ibtehaz2019}, C-UNet \cite{Hou2021}, and attention-assisted U-Net variants \cite{Akhtarmanesh2024}, have been proposed to enhance feature representation and mitigate challenges such as scale variation and occlusions in remote sensing imagery. Different approachs of extending by multiple encoders, U-net networks and 3D U-nets were reviewed et la. Jiangtao\cite{Jiangtao2025}.
+Recent developments have centered on convolutional neural network (CNN) architectures adapted for semantic segmentation tasks. The U-Net model introduced by Ronneberger et al. \cite{Ronneberger2015} demonstrated that a symmetric encoder-decoder structure with skip connections allows precise localization while effectively utilizing limited annotated data. Extensions and modifications of U-Net, including MultiResU-Net \cite{Ibtehaz2019}, C-U-Net \cite{Hou2021}, and attention-assisted U-Net variants \cite{Akhtarmanesh2024}, have been proposed to enhance feature representation and mitigate challenges such as scale variation and occlusions in remote sensing imagery. Different approachs of extending by multiple encoders, U-net networks and 3D U-nets were reviewed et la. Jiangtao\cite{Jiangtao2025}.
 
 \section{Conclusion}
+W pracy przeanalizowano potencjalne możliwości wykorzystania architektury U-Net w celu road recognition. Zaproponowano podstawowy model z modyfikowanymi ilościami neurownów oraz redukcjami nadmiarowych warstw. Postanowiono również zbadać model \(\Psi\)-Net w tym zastosowaniu. Przetestowano modele na dwóch różnych zbiorach danych oraz z dwoma różnymi funkcjami straty: binary crossentropy oraz dice coefficient loss. Metryki 
 
 %% Acknowledgments
 \begin{acks} %% acks environment is optional

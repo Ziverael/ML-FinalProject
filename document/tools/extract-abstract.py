@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+import argparse
 import io
 import re
 
-import argparse
-import pypandoc
 import panflute
+import pypandoc
+
 
 # store command definitions
 cmd_defs: dict[str, str] = {}
@@ -14,7 +15,7 @@ cmd_defs: dict[str, str] = {}
 def extract_cmds(latex_content):
     """Extract LaTeX command definitions."""
 
-    pattern = r'\\newdelimitedcommand{(\w+)}{(.+?)}'
+    pattern = r"\\newdelimitedcommand{(\w+)}{(.+?)}"
     matches = re.finditer(pattern, latex_content)
 
     commands = {}
@@ -31,7 +32,7 @@ def find_and_replace_cmds(elem: panflute.Element, _):
     """Find and replace LaTeX command definitions."""
     if isinstance(elem, panflute.RawInline) and elem.format == "latex":
         for command, definition in cmd_defs.items():
-            pattern = r'\\' + command + r'{}'
+            pattern = r"\\" + command + r"{}"
             text = re.sub(pattern, definition, elem.text)
 
             if elem.text != text:
@@ -42,13 +43,13 @@ def find_and_replace_cmds(elem: panflute.Element, _):
 
 def extract_abstract_from_meta(doc):
     """Extract the abstract from metadata."""
-    if 'abstract' in doc.metadata:
-        abstract = doc.metadata['abstract']
+    if "abstract" in doc.metadata:
+        abstract = doc.metadata["abstract"]
 
         # MetaBlocks are a list of block elements (e.g., Para, BulletList, etc.)
         if isinstance(abstract, panflute.MetaBlocks):
             return abstract.content
-        elif isinstance(abstract, panflute.MetaInlines):
+        if isinstance(abstract, panflute.MetaInlines):
             return [panflute.Para(abstract)]
 
     return None
@@ -67,7 +68,7 @@ def finalize(doc):
 
 def noop(elem, doc):
     """Noop for block-level filtering in a panflute filter action."""
-    return None
+    return
 
 
 def main():
@@ -76,14 +77,16 @@ def main():
     LaTeX commands.
     """
     parser = argparse.ArgumentParser(
-        description=r'Export abstract from LaTeX file to markdown with \\newdelimitedcommand replaced'
+        description=r"Export abstract from LaTeX file to markdown with \\newdelimitedcommand replaced"
     )
-    parser.add_argument('-i', "--input_file", help='input LaTeX file')
-    parser.add_argument('-o', "--output_file", help='output abstract as markdown file')
+    parser.add_argument("-i", "--input_file", help="input LaTeX file")
+    parser.add_argument(
+        "-o", "--output_file", help="output abstract as markdown file"
+    )
     args = parser.parse_args()
 
     try:
-        with open(args.input_file, 'r', encoding='utf-8') as file:
+        with open(args.input_file, encoding="utf-8") as file:
             content = file.read()
             global cmd_defs
             cmd_defs = extract_cmds(content)
@@ -92,16 +95,16 @@ def main():
         return
 
     data = pypandoc.convert_file(
-        args.input_file, 'json', extra_args=['--from=latex+raw_tex']
+        args.input_file, "json", extra_args=["--from=latex+raw_tex"]
     )
     content = io.StringIO(data)
     doc = panflute.load(content)
     doc = panflute.run_filter(noop, finalize=finalize, doc=doc)
     doc = panflute.run_filter(find_and_replace_cmds, doc=doc)
-    md_content = panflute.convert_text(doc, 'panflute', 'markdown')
+    md_content = panflute.convert_text(doc, "panflute", "markdown")
 
     try:
-        with open(args.output_file, 'w', newline='', encoding='utf-8') as file:
+        with open(args.output_file, "w", newline="", encoding="utf-8") as file:
             file.write(str(md_content))
     except Exception as exc:
         print(exc)
