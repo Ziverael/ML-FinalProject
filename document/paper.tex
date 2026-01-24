@@ -250,19 +250,27 @@ Accurate detection of road networks in satellite imagery is a fundamental task f
 Ten artykuł przeznaczony jest do analizy sieci U-Net będącej jedną z wariantów Convolution Neural Network oraz jej wykorzystaniu w celu wykrywania dróg na zdjęciach satelitarnych. Sieć ta szczególnie znana jest w zastosowaniach medycznych.
 \authorSix{Do przepisania}
 	
-U-Net is a specialized convolutional neural network (CNN) originally designed for image segmentation, particularly in biomedical imaging, where precise delineation of structures like organs, tumors, or cells is essential. It was proposed in Ronneberge et la.\cite{Ronneberger2015}. Its name comes from the distinctive U-shaped architecture, which consists of two main pathways: a contracting path (encoder) that captures contextual information by progressively downsampling the image, and an expanding path (decoder) that reconstructs spatial details by upsampling back to the original image size. Figure~\ref{diagram} This symmetrical design enables the U-Net to combine both high-level semantic information and fine-grained localization in the final pixel-wise segmentation map.
+U-Net is a specialized convolutional neural network (CNN) originally designed for image segmentation, particularly in biomedical imaging, where precise delineation of structures like organs, tumors, or cells is essential. It was proposed in Ronneberge et la.\cite{Ronneberger2015}. Its name comes from the distinctive U-shaped architecture, which consists of two main pathways: a contracting path (encoder) that captures contextual information by progressively downsampling the image, and an expanding path (decoder) that reconstructs spatial details by upsampling back to the original image size. Fig.~\ref{fig:unet} This symmetrical design enables the U-Net to combine both high-level semantic information and fine-grained localization in the final pixel-wise segmentation map.
 
 \begin{figure}[htp]
     \centering
     \includegraphics[width=12cm]{diagram}
-    \caption{Diagram of U-net archtecture (from Ibtehaz et al. \cite{Ibtehaz2019}).}
-    \label{fig:galaxy}
+    \caption{Diagram of U-net archtecture (from Ibtehaz et al. \cite{Ibtehaz2019})}
+    \label{fig:unet}
 \end{figure}
 
 The contracting path comprises a series of convolutional layers with activation functions (e.g., ReLU) and pooling operations that reduce spatial dimensions while increasing feature depth. This effectively extracts hierarchical features from the input. At the bottom of the “U” lies the bottleneck, which contains the most abstract representation of the input features. The expanding path then employs up-convolutions (also known as transposed convolutions) to restore spatial resolution. Importantly, it utilizes skip connections from corresponding levels of the encoder to preserve spatial information that might otherwise be lost during downsampling. These skip connections concatenate high-resolution encoder feature maps with decoder features, thus improving localization accuracy in the segmentation output.
 
 Z drguiej strony ciekawym przykładem do rozważenia może być \(\Psi\)-Net opisana et la. Kuang~\cite{Kuang2020} w celu predykcji intracerebral hemorrhage.
-As shown in Fig. 1\authorSix{Podać obraz i przełączyć hiperłącze}, the name goes from \(\Psi\)-shaped archtecture. The architecture is built upon the U-Net encoder-decoder framework but extends it by incorporating multi-slice input to capture spatial contextual information. Instead of a single slice, the network processes three consecutive slices—the target slice and its two adjacent slices. Since feature extraction is consistent across slices, the encoders share parameters, which both preserves contextual information and limits model complexity.
+As shown in Fig.~\ref{fig:psinet}, the name goes from \(\Psi\)-shaped archtecture. The architecture is built upon the U-Net encoder-decoder framework but extends it by incorporating multi-slice input to capture spatial contextual information. Instead of a single slice, the network processes three consecutive slices—the target slice and its two adjacent slices. Since feature extraction is consistent across slices, the encoders share parameters, which both preserves contextual information and limits model complexity.
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=12cm]{psinet}
+    \caption{Diagram of \(\Psi\)-net archtecture}
+    \label{fig:psinet}
+\end{figure}
+
 
 To enhance feature representation, \(\Psi\)-Net introduces attention mechanisms on both the encoding and decoding sides. On the encoding side, self-attention blocks replace the standard convolutional layers of U-Net, enabling the model to suppress irrelevant information and strengthen global feature extraction. These blocks leverage higher-level feature maps to generate attention weights for lower layers, inspired by residual attention learning, while avoiding excessive network depth.
 
@@ -296,10 +304,15 @@ The decoder employs straightforward upsampling followed by convolution instead o
 \section{Results}\label{sec:results}
 Aby obrać punkt odniesienia skorzystano z implementacji U-net zaproponowaną przez Tung Dinh~\cite{github.unet}. Przetrenowaliśmy ten model oraz nasze implementacje na dwóch różnych zbiorach danych. Pierwszy z nich składał się ze 100 zdjęć satelitarnych oraz 1000 sztucznie wygenerowanych obrazków~\cite{kaggle.dataset.image_road}. Drugi zbrór to DeepGlobe 2018 Dataset~\cite{Demir2018} zawerający 6226 zdjęć satelitarnych.
 
+Do ewaluowania wykorzystano 3 metryki. Pierwszą z nich było accuracy
+\[
+acccuracy=\frac{TP+TN}{N},
+\]
+where \(TP\) are true positive, \(TN\) true negative and \(N\) number of classified objects. Kolejna to Intersection over Union (IoU) which calculates the amount of overlapping area between two bounding boxes - predicted boundgin box and ground truth. The last one is Dice coefficient which is also similarity metric, but is more preferable in imbalanced datasets.
+
 Training and evaluations provide us series of useful observatrions. Po pierwsze modele uzyskiwały lepsze wartości accuracy dla danych z DeepGlobe. Wartości dla nich w kolejnych krokach treningu oscylowały w przediale \((0.96,0.98)\), gdy dla zbioru z Kaggle wyniki były w przedziale \((0.9, 0.92)\). Przewagę widać także w metryce dice coefficient, choć tutaj nie ma wyraźnie wizulanej granicy między datasetami.  Ponadto lepsze wyniki również osiągały modele wykorzystujące binary-crossentropy jako funkcję straty, niż te, które obrały dice coefficient loss. Co ciekawe dotyczy to obu omawianych metryk.
 
-Z Fig.~\ref{fig:metrics} zauważyć można zarówno w metryce dice coefficient oraz accuracy i iou coefficient dedicate U-Net nieznacznie pokonuje pozostałe dwa modele. Model bazowy pozstaje w tyle we wszystkich metrykach z wyłączeniem iou coefficient, dla którego uzyskuje lepsze wyniki, niż \(\Psi\)-Net. Obserwjąc stratę, widać, że model \(\Psi\)-Net zbiegał najbardziej niestabilinie. Jednocześnie warto zauważyć jak znacząca jest różnica w czasie treningu. Kiedy czas treningu baseline wyniósł około 1h, trening dedicated U-Net 3h to trening \(\Psi\)-Net już 12 h. Uwzględniając wyniki metryk, zdaje się, że model \(\Psi\)-Net nie jest wart, aż takich kosztów, a przynajmniej bez rozważenia jakichś usprawnień.
-\authorFive{Dodać jeszcze test eval}
+Z Fig.~\ref{fig:metrics} zauważyć można zarówno w metryce dice coefficient oraz accuracy i iou coefficient dedicate U-Net nieznacznie pokonuje pozostałe dwa modele. Model bazowy pozstaje w tyle we wszystkich metrykach z wyłączeniem iou coefficient, dla którego uzyskuje lepsze wyniki, niż \(\Psi\)-Net. Obserwjąc stratę, widać, że model \(\Psi\)-Net zbiegał najbardziej niestabilinie. Wyniki na danych testowych ukazały analogiczne wartości jak w te obserwpwame w danych walidacyjnych. Przedstawiono je w tabeli Table~\ref{tab:test} Jednocześnie warto zauważyć jak znacząca jest różnica w czasie treningu. Kiedy czas treningu baseline wyniósł około 1h, trening dedicated U-Net 3h to trening \(\Psi\)-Net już 12 h. Uwzględniając wyniki metryk, zdaje się, że model \(\Psi\)-Net nie jest wart, aż takich kosztów, a przynajmniej bez rozważenia jakichś usprawnień.
 \begin{figure}[htp]
     \includegraphics[width=6.5cm]{acc.png}
     \includegraphics[width=6.5cm]{dice.png}
@@ -309,6 +322,22 @@ Z Fig.~\ref{fig:metrics} zauważyć można zarówno w metryce dice coefficient o
     \caption{Validation metrics comparison for all three models with dice loss and DeepGlobe dataset. Those models are U-Net (blue, alias unet\_base\_1\_dice\_dg), dedicated U-Net (green, alias unet\_modified\_1\_dice\_dg), and \(\Psi\)-Net (red, psinet\_dice\_dg).}
     \label{fig:metrics}
 \end{figure}
+
+\begin{table}
+\begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|p{3cm}|  }
+\hline
+\multicolumn{4}{|c|}{Test metrics} \\
+\hline
+Model& accuracy &dice & iou \\
+\hline
+U-Net & 0.9705 & 0.6242 &0.4775 \\
+Dedicated U-Net & 0.9719 & 0.6521   & 0.505 \\
+\(\Psi\)-Net & 0.971 & 0.6259 & 0.4765 \\
+\hline
+\end{tabular}
+\caption{Test dataset metrics evaluation on trained models}
+\label{tab:test}
+\end{table}
 
 Z Fig.~\ref{fig:preds} można mieć wątpliwości, który z modeli poradził sobie najlepiej. Z jednej strony baseline zdaje się najdokładniej znajdować drogi, jednak z drugiej strony sklasyfikował znacznie więcej przypadkowych obiektów jako fragmenty dróg. Ponadto linie dróg w jego przypadku są najgrubsze. Pozostałe dwa modele generowały cieńsze linie, jakby próbowały skupić się na szukaniu centerline dróg. Z tego porównania \(\Psi\)-Net wypadł najgorzej. Zdawał się bardzo oszczędny we wskazywaniu dróg.
 
@@ -327,7 +356,7 @@ Automatic road extraction from satellite imagery has been an active area of rese
 Recent developments have centered on convolutional neural network (CNN) architectures adapted for semantic segmentation tasks. The U-Net model introduced by Ronneberger et al. \cite{Ronneberger2015} demonstrated that a symmetric encoder-decoder structure with skip connections allows precise localization while effectively utilizing limited annotated data. Extensions and modifications of U-Net, including MultiResU-Net \cite{Ibtehaz2019}, C-U-Net \cite{Hou2021}, and attention-assisted U-Net variants \cite{Akhtarmanesh2024}, have been proposed to enhance feature representation and mitigate challenges such as scale variation and occlusions in remote sensing imagery. Different approachs of extending by multiple encoders, U-net networks and 3D U-nets were reviewed et la. Jiangtao\cite{Jiangtao2025}.
 
 \section{Conclusion}
-W pracy przeanalizowano potencjalne możliwości wykorzystania architektury U-Net w celu road recognition. Zaproponowano podstawowy model z modyfikowanymi ilościami neurownów oraz redukcjami nadmiarowych warstw. Postanowiono również zbadać model \(\Psi\)-Net w tym zastosowaniu. Przetestowano modele na dwóch różnych zbiorach danych oraz z dwoma różnymi funkcjami straty: binary crossentropy oraz dice coefficient loss. Metryki 
+W pracy przeanalizowano potencjalne możliwości wykorzystania architektury U-Net w celu road recognition. Zaproponowano podstawowy model z modyfikowanymi ilościami neurownów oraz redukcjami nadmiarowych warstw. Postanowiono również zbadać model \(\Psi\)-Net w tym zastosowaniu. Przetestowano modele na dwóch różnych zbiorach danych oraz z dwoma różnymi funkcjami straty: binary crossentropy oraz dice coefficient loss. Uzyskano dla proponowanych modeli accuracy 0.9719 i 0.971 oraz dice coefficient 0.6521 i 0.6529 dla Dedicated U-Net oraz \(\Psi\)-Net co było wynikami lepszymi, niż domyślny U-Net. Jednakże porównanie realnie uzyskanych masek dróg sugeruje, że modele wymagają dalszych usprawnień. W szególności \(\Psi\)-Net zdaje się nie być szczególnie zachęcającym modelem do trenowania, ze wzlgędu na fakt, że jego trening był 4 razy dłuższy, niż dla Dedicated U-Net.
 
 %% Acknowledgments
 \begin{acks} %% acks environment is optional
