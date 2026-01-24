@@ -1,12 +1,15 @@
 from pathlib import Path
+
 from pydantic import BaseModel
 
+
 class _ProjectPaths(BaseModel):
-    project : Path = Path.cwd()
-    data : Path = project / "data"
-    tmp : Path = project / "tmp"
-    logs : Path = project / "logs"
-    models : Path = project / "models"
+    project: Path = Path.cwd()
+    data: Path = project / "data"
+    tmp: Path = project / "tmp"
+    logs: Path = project / "logs"
+    models: Path = project / "models"
+
 
 PROJECT_PATHS = _ProjectPaths()
 
